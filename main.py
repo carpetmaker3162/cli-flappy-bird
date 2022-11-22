@@ -2,6 +2,7 @@ from getch import getch
 import time
 import queue
 import threading
+import sys
 
 event_queue = queue.Queue()
 
@@ -21,4 +22,12 @@ while True:
 
     if not event_queue.empty():
         key = event_queue.get().strip()
+        
+        # right now exiting the game through ESC breaks the terminal im tryia fix it gimme a break goddammmita
+        if ord(key) == 27:
+            sys.stdout.flush()
+            break
+        
+        print(ord(key), end=" ")
+        sys.stdout.flush()
         # print(input_queue.get().strip(), end="")
