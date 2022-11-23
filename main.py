@@ -37,7 +37,7 @@ while True:
         last_update = time.time()
     
     if event_queue:
-        key = event_queue.pop()
+        key = event_queue.pop(0)
         
         # process keyboard events here
         if index(key) in (27, 3, 4):
