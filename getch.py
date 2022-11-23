@@ -1,3 +1,5 @@
+import os
+
 def _unix_getch():
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -11,9 +13,9 @@ def _unix_getch():
 def _win_getch():
     return msvcrt.getch()
 
-try:
+if os.name == "nt":
     import msvcrt
     getch = _win_getch
-except ImportError:
+else:
     import sys, tty, termios
     getch = _unix_getch
