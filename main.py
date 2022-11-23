@@ -16,8 +16,8 @@ def process_keys(q):
     while True:
         q.put(getch())
 
-def index(char=None): # non-breaking version of ord
-    if char is None:
+def index(char):
+    if char is None or char == " " or len(char) == 0:
         return -1
     else:
         return ord(char)
@@ -39,7 +39,7 @@ while True:
             sys.stdout.flush()
             break
         
-        print(ord(key), end=" ")
+        print(index(key), end=" ")
         sys.stdout.flush()
         # print(input_queue.get().strip(), end="")
 
