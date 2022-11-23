@@ -18,7 +18,7 @@ def process_keys(q):
 
 def index(char):
     if char is None or char == " " or len(char) == 0:
-        return -1
+        return 32
     else:
         return ord(char)
 
