@@ -1,8 +1,14 @@
+# lmfao i just realized how sus my imports look
 from getch import getch
 import time
 import queue
 import threading
 import sys
+import termios
+import os
+
+fd = sys.stdin.fileno()
+old_settings = termios.tcgetattr(fd)
 
 event_queue = queue.Queue()
 
@@ -31,3 +37,6 @@ while True:
         print(ord(key), end=" ")
         sys.stdout.flush()
         # print(input_queue.get().strip(), end="")
+
+if os.name != "nt":
+    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
