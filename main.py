@@ -35,11 +35,12 @@ while True:
         key = event_queue.get().strip()
         
         if index(key) in (27, 3, 4):
-            sys.stdout.flush()
+            #sys.stdout.flush()
             break
         
         print(index(key), end=" ")
-        sys.stdout.flush()
+        #sys.stdout.flush()
 
+# reset terminal settings when you exit the game
 if os.name != "nt":
     termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
