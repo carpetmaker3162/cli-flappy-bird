@@ -29,7 +29,6 @@ while True:
     if not event_queue.empty():
         key = event_queue.get().strip()
         
-        # right now exiting the game through ESC breaks the terminal im tryia fix it gimme a break goddammmita
         if ord(key) == 27:
             sys.stdout.flush()
             break
