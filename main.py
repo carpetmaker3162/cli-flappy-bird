@@ -9,22 +9,21 @@ import os
 
 fd = sys.stdin.fileno()
 old_settings = termios.tcgetattr(fd)
-
 event_queue = queue.Queue()
 
-def process_keys(q):
+def process_keyboard_events(q):
     while True:
         q.put(getch())
+
+thread = threading.Thread(target=process_keyboard_events, args=(event_queue,))
+thread.daemon = True
+thread.start()
 
 def index(char):
     if char is None or char == " " or len(char) == 0:
         return 32
     else:
         return ord(char)
-
-thread = threading.Thread(target=process_keys, args=(event_queue,))
-thread.daemon = True
-thread.start()
 
 last_update = time.time()
 
@@ -41,7 +40,6 @@ while True:
         
         print(index(key), end=" ")
         sys.stdout.flush()
-        # print(input_queue.get().strip(), end="")
 
 if os.name != "nt":
     termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
