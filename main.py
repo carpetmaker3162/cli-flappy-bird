@@ -34,7 +34,7 @@ while True:
     if not event_queue.empty():
         key = event_queue.get().strip()
         
-        if index(key) == 27:
+        if index(key) in (27, 3, 4):
             sys.stdout.flush()
             break
         
