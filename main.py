@@ -16,6 +16,12 @@ def process_keys(q):
     while True:
         q.put(getch())
 
+def index(char=None): # non-breaking version of ord
+    if char is None:
+        return -1
+    else:
+        return ord(char)
+
 thread = threading.Thread(target=process_keys, args=(event_queue,))
 thread.daemon = True
 thread.start()
@@ -25,11 +31,11 @@ last_update = time.time()
 while True:
     if time.time() - last_update > 0.5:
         last_update = time.time()
-
+    
     if not event_queue.empty():
         key = event_queue.get().strip()
         
-        if ord(key) == 27:
+        if index(key) == 27:
             sys.stdout.flush()
             break
         
