@@ -127,7 +127,7 @@ class Scene:
             if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, 16) or int(self.player.y) in range(0, py)): # if player has collided with a pipe (...in theory)
                 # raising an exception so that the `finally` clause is triggered. will change later
                 raise SystemExit
-            
+
             for mx in range(px, px + 2):
                 for my in range(0, py):
                     blank_matrix[my][mx] = 1
