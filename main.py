@@ -50,7 +50,7 @@ class Scene:
         self.pipes = [] # [openingX, openingY]
         self.last_pipe_generated = 0 # in no particular unit, counted per "frame"/refresh
         self.frame = 0
-        self.matrix = [[0] * SCREENW] * 16 # this will be used to detect collision & will contain where all the hitboxes are located. update this matrix and then print the screen from it (round when updating player y)
+        self.matrix = [[0 for i in range(SCREENW)] for i in range(16)] # this will be used to detect collision & will contain where all the hitboxes are located. update this matrix and then print the screen from it (round when updating player y)
         self.player = Player()
         self.objcode = {0: " ", 1: "#", 2: "O"}
     
@@ -101,16 +101,16 @@ class Scene:
         openingY: 3
         """
         queue = self.pipes[:]
-        blank_matrix = [[0] * SCREENW] * 16
+        blank_matrix = [[0 for i in range(SCREENW)] for i in range(16)]
         while queue: # uhh terrible time complexity but we'll see
             px, py = queue.pop(0)
             print("sz", (px, py))
             for mx in range(px, px + 2):
                 for my in range(0, py):
-                    blank_matrix[my][mx-1] = 1
+                    blank_matrix[my][mx] = 1
                 
                 for my in range(py+3, 16):
-                    blank_matrix[my][mx-1] = 1
+                    blank_matrix[my][mx] = 1
         self.matrix = blank_matrix
 
 class Player:
