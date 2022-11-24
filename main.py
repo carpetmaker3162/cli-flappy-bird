@@ -36,11 +36,11 @@ class Player:
         self.x = 10 # shouldnt ever change
         self.y = 8
         self.y_speed = 1 # positive number when going DOWNWARDS. me when i suddenly realize why PyGame's coordinate system works like it does: 😔
-        self.y_acceleration = 0.8 # positive number when going DOWNWARDS
+        self.y_acceleration = 0.3 # positive number when going DOWNWARDS
     
     def jump(self):
         # reminder to check how i made jumping in Poopland
-        self.y_speed -= 2
+        self.y_speed = -1
 
 class Scene:
     """Game Scene
@@ -162,7 +162,7 @@ if __name__ == "__main__":
                     # refresh objects on the screen
                     last_update = time.time()
                     
-                    if scene.last_pipe_generated - scene.frame == 10:
+                    if scene.last_pipe_generated - scene.frame >= 10:
                         scene.add_new_pipe()
                     
                     scene.refresh()
