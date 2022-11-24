@@ -1,5 +1,7 @@
 .vscode
 test.py
+test.cpp
+a.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
