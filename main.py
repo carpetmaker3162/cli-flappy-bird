@@ -124,7 +124,8 @@ class Scene:
         while queue: # uhh terrible time complexity but we'll see
             px, py = queue.pop(0)
             
-            if px == self.player.x and py == int(self.player.y): # if player has collided with a pipe (...in theory)
+            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, 16) or int(self.player.y) in range(0, py)): # if player has collided with a pipe (...in theory)
+                # raising an exception so that the `finally` clause is triggered. will change later
                 raise SystemExit
             
             for mx in range(px, px + 2):
