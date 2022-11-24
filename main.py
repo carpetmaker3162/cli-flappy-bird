@@ -70,7 +70,7 @@ class Scene:
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
         if clear_screen:
-            os.system("cls" if IS_WIN else "clear")
+            print("\033[H")
         print("\r", end="")
         
         for row in self.matrix:
@@ -97,7 +97,7 @@ class Scene:
     
     def add_new_pipe(self):
         self.last_pipe_generated = self.frame
-        self.pipes.append([SCREENW-1, random.randrange(2, 14)])
+        self.pipes.append([SCREENW-2, random.randrange(2, 14)])
 
     def load_matrix(self): # at this point im probably overcomplicating things but ehh this is easier for me
         """
@@ -124,8 +124,8 @@ class Scene:
         while queue: # uhh terrible time complexity but we'll see
             px, py = queue.pop(0)
             
-            if px == self.player.x and py == self.player.y: # if player has collided with a pipe (...in theory)
-                sys.exit() # change later
+            if px == self.player.x and py == int(self.player.y): # if player has collided with a pipe (...in theory)
+                raise SystemExit
             
             for mx in range(px, px + 2):
                 for my in range(0, py):
@@ -153,6 +153,7 @@ if __name__ == "__main__":
             # test here
             pass
         else:
+            os.system("cls" if IS_WIN else "clear")
             scene = Scene()
             scene.add_new_pipe()
             scene.refresh()
@@ -162,7 +163,7 @@ if __name__ == "__main__":
                     # refresh objects on the screen
                     last_update = time.time()
                     
-                    if scene.last_pipe_generated - scene.frame >= 10:
+                    if scene.frame - scene.last_pipe_generated >= 20:
                         scene.add_new_pipe()
                     
                     scene.refresh()
