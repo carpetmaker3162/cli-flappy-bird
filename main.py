@@ -28,7 +28,7 @@ thread.daemon = True
 thread.start()
 
 SCREENW, SCREENH = os.get_terminal_size() # game scene will be 16 lines long in the terminal
-REFRESH_RATE = 0.25
+REFRESH_RATE = 0.1
 
 class Player:
     def __init__(self) -> None:
@@ -36,7 +36,7 @@ class Player:
         self.x = 10 # shouldnt ever change
         self.y = 8
         self.y_speed = 1 # positive number when going DOWNWARDS. me when i suddenly realize why PyGame's coordinate system works like it does: 😔
-        self.y_acceleration = 0.45 # positive number when going DOWNWARDS
+        self.y_acceleration = 0.8 # positive number when going DOWNWARDS
     
     def jump(self):
         # reminder to check how i made jumping in Poopland
@@ -133,8 +133,8 @@ class Scene:
                 
                 for my in range(py+3, 16):
                     blank_matrix[my][mx] = 1
-        self.matrix[int(self.player.y)][self.player.x] = 2
         self.matrix = blank_matrix
+        self.matrix[int(self.player.y)][self.player.x] = 2
 
         # load the player
 
@@ -166,6 +166,11 @@ if __name__ == "__main__":
                         scene.add_new_pipe()
                     
                     scene.refresh()
+                    with open("test.txt", "a") as f:
+                        for i in scene.matrix:
+                            f.write("\n")
+                            f.write(str(i))
+                        f.write("\n")
                     scene.print()
                 
                 if event_queue:
