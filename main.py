@@ -1,6 +1,6 @@
 # lmfao i just realized how sus my imports look
 # also im going to put everything in one file until theres too much stuff for me to scroll through
-TESTING = True
+TESTING = False
 
 import time
 import threading
@@ -30,6 +30,18 @@ thread.start()
 SCREENW, SCREENH = os.get_terminal_size() # game scene will be 16 lines long in the terminal
 REFRESH_RATE = 0.25
 
+class Player:
+    def __init__(self) -> None:
+        # y_speed and y are both going to be floats at some point or another so probably just round when drawing the player in Scene
+        self.x = 10 # shouldnt ever change
+        self.y = 8
+        self.y_speed = 1 # positive number when going DOWNWARDS. me when i suddenly realize why PyGame's coordinate system works like it does: 😔
+        self.y_acceleration = 0.45 # positive number when going DOWNWARDS
+    
+    def jump(self):
+        # reminder to check how i made jumping in Poopland
+        self.y_speed -= 2
+
 class Scene:
     """Game Scene
     
@@ -53,6 +65,7 @@ class Scene:
         self.matrix = [[0 for i in range(SCREENW)] for i in range(16)] # this will be used to detect collision & will contain where all the hitboxes are located. update this matrix and then print the screen from it (round when updating player y)
         self.player = Player()
         self.objcode = {0: " ", 1: "#", 2: "O"}
+        self.dead = False
     
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
@@ -75,11 +88,15 @@ class Scene:
         self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes))
         for idx, pipe in enumerate(self.pipes):
             # move all pipes to the left
+            px, py = pipe
             self.pipes[idx][0] -= 1
         
+        self.player.y_speed += self.player.y_acceleration
+        self.player.y += self.player.y_speed
         self.load_matrix()
     
-    def new_pipe(self):
+    def add_new_pipe(self):
+        self.last_pipe_generated = self.frame
         self.pipes.append([SCREENW-1, random.randrange(2, 14)])
 
     def load_matrix(self): # at this point im probably overcomplicating things but ehh this is easier for me
@@ -100,29 +117,27 @@ class Scene:
         openingX: 2
         openingY: 3
         """
+
+        # loading the pipes
         queue = self.pipes[:]
         blank_matrix = [[0 for i in range(SCREENW)] for i in range(16)]
         while queue: # uhh terrible time complexity but we'll see
             px, py = queue.pop(0)
-            print("sz", (px, py))
+            
+            if px == self.player.x and py == self.player.y: # if player has collided with a pipe (...in theory)
+                sys.exit() # change later
+            
             for mx in range(px, px + 2):
                 for my in range(0, py):
                     blank_matrix[my][mx] = 1
                 
                 for my in range(py+3, 16):
                     blank_matrix[my][mx] = 1
+        self.matrix[int(self.player.y)][self.player.x] = 2
         self.matrix = blank_matrix
 
-class Player:
-    def __init__(self) -> None:
-        # y_speed and y are both going to be floats at some point or another so probably just round when drawing the player in Scene
-        self.y = 8
-        self.y_speed = 0 # positive number when going upwards. me when i suddenly realize why PyGame's coordinate system works like it does: 😔
-        self.y_acceleration = 0 # positive number when going upwards
-    
-    def jump(self):
-        # reminder to check how i made jumping in Poopland
-        pass
+        # load the player
+
 
 def index(char):
     if char is None or char == " " or len(char) == 0:
@@ -135,16 +150,23 @@ last_update = time.time()
 if __name__ == "__main__":
     try:
         if TESTING:
-                # test here
-                scene = Scene()
-                scene.new_pipe()
-                scene.refresh()
-                scene.print(clear_screen=False)
+            # test here
+            pass
         else:
+            scene = Scene()
+            scene.add_new_pipe()
+            scene.refresh()
+            scene.print()
             while True:
                 if time.time() - last_update > REFRESH_RATE:
                     # refresh objects on the screen
                     last_update = time.time()
+                    
+                    if scene.last_pipe_generated - scene.frame == 10:
+                        scene.add_new_pipe()
+                    
+                    scene.refresh()
+                    scene.print()
                 
                 if event_queue:
                     key = event_queue.pop(0)
@@ -154,7 +176,9 @@ if __name__ == "__main__":
                         sys.stdout.flush()
                         break
                     
-                    print(index(key), end=" ")
+                    if index(key) == 32:
+                        scene.player.jump()
+
                     sys.stdout.flush()
     except Exception as e:
         raise e
