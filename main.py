@@ -27,8 +27,10 @@ thread = threading.Thread(target=process_keyboard_events, args=(event_queue,))
 thread.daemon = True
 thread.start()
 
-SCREENW, SCREENH = os.get_terminal_size() # game scene will be 16 lines long in the terminal
-REFRESH_RATE = 0.1
+SCREENW, SCREENH = os.get_terminal_size()
+REFRESH_RATE = 0.04
+
+SCENE_HEIGHT = 20
 
 class Player:
     def __init__(self) -> None:
@@ -36,7 +38,7 @@ class Player:
         self.x = 10 # shouldnt ever change
         self.y = 8
         self.y_speed = 1 # positive number when going DOWNWARDS. me when i suddenly realize why PyGame's coordinate system works like it does: 😔
-        self.y_acceleration = 0.3 # positive number when going DOWNWARDS
+        self.y_acceleration = 0.2 # positive number when going DOWNWARDS
     
     def jump(self):
         # reminder to check how i made jumping in Poopland
@@ -62,7 +64,7 @@ class Scene:
         self.pipes = [] # [openingX, openingY]
         self.last_pipe_generated = 0 # in no particular unit, counted per "frame"/refresh
         self.frame = 0
-        self.matrix = [[0 for i in range(SCREENW)] for i in range(16)] # this will be used to detect collision & will contain where all the hitboxes are located. update this matrix and then print the screen from it (round when updating player y)
+        self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # this will be used to detect collision & will contain where all the hitboxes are located. update this matrix and then print the screen from it (round when updating player y)
         self.player = Player()
         self.objcode = {0: " ", 1: "#", 2: "O"}
         self.dead = False
@@ -120,19 +122,19 @@ class Scene:
 
         # loading the pipes
         queue = self.pipes[:]
-        blank_matrix = [[0 for i in range(SCREENW)] for i in range(16)]
+        blank_matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)]
         while queue: # uhh terrible time complexity but we'll see
             px, py = queue.pop(0)
             
-            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, 16) or int(self.player.y) in range(0, py)): # if player has collided with a pipe (...in theory)
+            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, SCENE_HEIGHT) or int(self.player.y) in range(0, py)): # if player has collided with a pipe (...in theory)
                 # raising an exception so that the `finally` clause is triggered. will change later
                 raise SystemExit
-            
+
             for mx in range(px, px + 2):
                 for my in range(0, py):
                     blank_matrix[my][mx] = 1
                 
-                for my in range(py+3, 16):
+                for my in range(py+3, SCENE_HEIGHT):
                     blank_matrix[my][mx] = 1
         self.matrix = blank_matrix
         self.matrix[int(self.player.y)][self.player.x] = 2
