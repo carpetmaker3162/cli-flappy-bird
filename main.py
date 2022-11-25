@@ -99,7 +99,7 @@ class Scene:
             px, py = queue.pop(0)
             
             # check for collision
-            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, SCENE_HEIGHT) or int(self.player.y) in range(0, py)):
+            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, SCENE_HEIGHT) or int(self.player.y) in range(-100000, py)):
                 # raising an exception so that the `finally` clause is triggered. will change later
                 raise SystemExit
 
@@ -113,7 +113,10 @@ class Scene:
         self.matrix = blank_matrix
         
         # load the player
-        self.matrix[int(self.player.y)][self.player.x] = 2
+        if 0<=self.player.y and SCENE_HEIGHT>self.player.y: # do not render the player if it is out of bounds, upwards
+            self.matrix[int(self.player.y)][self.player.x] = 2
+        elif self.player.y > SCENE_HEIGHT + 5: # kill if player is 5 units below the scene bottom
+            raise SystemExit
 
 last_update = time.time()
 
