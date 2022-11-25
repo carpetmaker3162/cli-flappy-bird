@@ -1,7 +1,6 @@
 # TODO: make the game get progressively more difficult
 # TODO: instead of refreshing based on in-game "frames", refresh based on real-life time, to allow the player to move more smoothly
 # TODO: after the above task is done, maybe make the physics a wee bit better
-# TODO: keep track of score
 
 import time
 import threading
