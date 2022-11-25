@@ -129,6 +129,7 @@ class Scene:
         elif self.player.y > SCENE_HEIGHT + 5: # kill if player is 5 units below the scene bottom
             self.die()
             print(f"\nScore: {self.score}", end="\n\r")
+            # since the main game loop doesnt detect player death, this is the only actual death condition within the game
             raise SystemExit
     
     def die(self):
