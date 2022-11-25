@@ -1,5 +1,5 @@
 # cli-game
-Flappy bird (?) in CLI  
+~~Flappy~~ Floppy bird in CLI  
 
 Note: due to limitations with the code author's intelligence, you won't be able to resize the terminal once you're in the game. Rip, bozo!  
 
