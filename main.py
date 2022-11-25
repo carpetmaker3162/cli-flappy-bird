@@ -64,7 +64,7 @@ class Scene:
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
         if clear_screen:
-            print("\033[H")d
+            print("\033[H")
         print("\r", end="")
         
         for row in self.matrix:
