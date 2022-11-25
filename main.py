@@ -19,8 +19,8 @@ old_settings = termios.tcgetattr(fd)
 event_queue = []
 IS_WIN = os.name == "nt" # fuck windows fr
 
-def process_keyboard_events(q):
-    while True:
+def process_keyboard_events(q, dead):
+    while not dead[0]:
         q.append(getch())
 
 def reset_terminal():
@@ -43,6 +43,7 @@ PIPE_OPENING_SIZE = 5
 
 class Player:
     def __init__(self) -> None:
+        self.dead = [False] # simply using a bool doesnt work because the thread would just take the initial state of the bool and keep running
         self.x = 10 # shouldnt ever change but just putting it here
         self.y = 8
         # positive number when going downwards. dont ask why
@@ -60,7 +61,7 @@ class Scene:
         self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
         self.player = Player()
         self.objcode = {0: " ", 1: "#", 2: "O"}
-        self.dead = False
+        self.score = 0
     
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
@@ -78,8 +79,9 @@ class Scene:
         self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes)) # filter out pipes that are no longer on the screen
         
         # move all pipes to the left
-        for idx, pipe in enumerate(self.pipes):
-            self.pipes[idx][0] -= 1
+        if not self.player.dead[0]:
+            for idx, pipe in enumerate(self.pipes):
+                self.pipes[idx][0] -= 1
         
         self.player.y_speed += self.player.y_acceleration
         self.player.y += self.player.y_speed
@@ -99,7 +101,9 @@ class Scene:
             # check for collision
             if self.player.x in range(px, px + 2) and (math.ceil(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or math.ceil(self.player.y) in range(-100000, py)):
                 # raising an exception so that the `finally` clause is triggered. will change later
-                raise SystemExit
+                self.player.dead[0] = True
+                self.player.x -= 1
+                self.player.y_acceleration = 0.1
 
             for mx in range(px, px + 2):
                 for my in range(0, py):
@@ -139,7 +143,7 @@ if __name__ == "__main__":
             os.system("cls" if IS_WIN else "clear")
 
             # game loop
-            thread = threading.Thread(target=process_keyboard_events, args=(event_queue,))
+            thread = threading.Thread(target=process_keyboard_events, args=(event_queue, scene.player.dead))
             thread.daemon = True
             thread.start()
 
