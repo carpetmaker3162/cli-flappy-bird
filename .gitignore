@@ -3,6 +3,7 @@ test.py
 test.cpp
 a.out
 test.txt
+old/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

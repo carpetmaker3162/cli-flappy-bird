@@ -1,6 +1,7 @@
-# lmfao i just realized how sus my imports look
-# also im going to put everything in one file until theres too much stuff for me to scroll through
-TESTING = False
+# TODO: make the game get progressively more difficult
+# TODO: instead of refreshing based on in-game "frames", refresh based on real-life time, to allow the player to move more smoothly
+# TODO: after the above task is done, maybe make the physics a wee bit better
+# TODO: keep track of score
 
 import time
 import threading
@@ -10,61 +11,55 @@ import os
 import random
 from getch import getch
 
+TESTING = False # for my own use because i am lazy
+
 fd = sys.stdin.fileno()
 old_settings = termios.tcgetattr(fd)
 event_queue = []
-IS_WIN = os.name == "nt"
+IS_WIN = os.name == "nt" # fuck windows fr
 
 def process_keyboard_events(q):
     while True:
         q.append(getch())
 
 def reset_terminal():
+    # i need to get someone to test the game on windows to make sure it works.
+    # ...if it doesnt its not like i can fix it myself since im on a mac but whatevs
     if not IS_WIN:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+def index(char):
+    # alternative to ord() that doesnt break when user presses space
+    if char is None or char == " " or len(char) == 0:
+        return 32
+    else:
+        return ord(char)
 
 thread = threading.Thread(target=process_keyboard_events, args=(event_queue,))
 thread.daemon = True
 thread.start()
 
 SCREENW, SCREENH = os.get_terminal_size()
-REFRESH_RATE = 0.04
-
+REFRESH_RATE = 0.04 # in seconds
 SCENE_HEIGHT = 20
 
 class Player:
     def __init__(self) -> None:
-        # y_speed and y are both going to be floats at some point or another so probably just round when drawing the player in Scene
-        self.x = 10 # shouldnt ever change
+        self.x = 10 # shouldnt ever change but just putting it here
         self.y = 8
-        self.y_speed = 1 # positive number when going DOWNWARDS. me when i suddenly realize why PyGame's coordinate system works like it does: 😔
-        self.y_acceleration = 0.2 # positive number when going DOWNWARDS
+        # positive number when going downwards. dont ask why
+        self.y_speed = 1
+        self.y_acceleration = 0.2
     
     def jump(self):
-        # reminder to check how i made jumping in Poopland
         self.y_speed = -1
 
 class Scene:
-    """Game Scene
-    
-    Coordinate system:
-       _______________________________________x
-      |   0  1  2  3  4  5  6  7  8  9  10 11 ...
-      |0
-      |1
-      |2
-      |3
-      |4
-      |5
-      |6
-      |7
-     y...
-    """
     def __init__(self) -> None:
-        self.pipes = [] # [openingX, openingY]
-        self.last_pipe_generated = 0 # in no particular unit, counted per "frame"/refresh
+        self.pipes = []
+        self.last_pipe_generated = 0
         self.frame = 0
-        self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # this will be used to detect collision & will contain where all the hitboxes are located. update this matrix and then print the screen from it (round when updating player y)
+        self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
         self.player = Player()
         self.objcode = {0: " ", 1: "#", 2: "O"}
         self.dead = False
@@ -78,19 +73,14 @@ class Scene:
         for row in self.matrix:
             for cell in row:
                 print(self.objcode[cell], end="")
-            print("\n\r", end="") # newline without breaking everything
+            print("\n\r", end="")
     
-    def refresh(self): # note: refresh and check for collision BEFORE printing out the new screen, so that collision (game end) can be detected before it is displayed
+    def refresh(self):
         self.frame += 1
+        self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes)) # filter out pipes that are no longer on the screen
         
-        if self.frame - self.last_pipe_generated > 6:
-            # generate new pipe
-            pass
-        
-        self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes))
+        # move all pipes to the left
         for idx, pipe in enumerate(self.pipes):
-            # move all pipes to the left
-            px, py = pipe
             self.pipes[idx][0] -= 1
         
         self.player.y_speed += self.player.y_acceleration
@@ -101,32 +91,15 @@ class Scene:
         self.last_pipe_generated = self.frame
         self.pipes.append([SCREENW-2, random.randrange(2, 14)])
 
-    def load_matrix(self): # at this point im probably overcomplicating things but ehh this is easier for me
-        """
-        Loading pipes:
-         ____________________x
-        | 0 1 2 3 4 5 6 7 8 9
-        |0    # #
-        |1    # #
-        |2    # #
-        |3
-        |4
-        |5    # #
-        |6    # #
-        |7    # #
-        y...
-
-        openingX: 2
-        openingY: 3
-        """
-
+    def load_matrix(self):
         # loading the pipes
         queue = self.pipes[:]
         blank_matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)]
-        while queue: # uhh terrible time complexity but we'll see
+        while queue:
             px, py = queue.pop(0)
             
-            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, SCENE_HEIGHT) or int(self.player.y) in range(0, py)): # if player has collided with a pipe (...in theory)
+            # check for collision
+            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, SCENE_HEIGHT) or int(self.player.y) in range(0, py)):
                 # raising an exception so that the `finally` clause is triggered. will change later
                 raise SystemExit
 
@@ -136,60 +109,54 @@ class Scene:
                 
                 for my in range(py+3, SCENE_HEIGHT):
                     blank_matrix[my][mx] = 1
+        
         self.matrix = blank_matrix
-        self.matrix[int(self.player.y)][self.player.x] = 2
-
+        
         # load the player
-
-
-def index(char):
-    if char is None or char == " " or len(char) == 0:
-        return 32
-    else:
-        return ord(char)
+        self.matrix[int(self.player.y)][self.player.x] = 2
 
 last_update = time.time()
 
 if __name__ == "__main__":
     try:
         if TESTING:
-            # test here
+            # when i need to test stuff
             pass
         else:
             os.system("cls" if IS_WIN else "clear")
+            # initing
             scene = Scene()
             scene.add_new_pipe()
             scene.refresh()
             scene.print()
+            # game loop
             while True:
+                # refresh objects on the screen
                 if time.time() - last_update > REFRESH_RATE:
-                    # refresh objects on the screen
                     last_update = time.time()
                     
+                    # new pipe every 20 units. later on, as the game progresses, the pipes will become more frequent
                     if scene.frame - scene.last_pipe_generated >= 20:
                         scene.add_new_pipe()
                     
                     scene.refresh()
-                    with open("test.txt", "a") as f:
-                        for i in scene.matrix:
-                            f.write("\n")
-                            f.write(str(i))
-                        f.write("\n")
                     scene.print()
                 
                 if event_queue:
                     key = event_queue.pop(0)
                     
-                    # process keyboard events here
-                    if index(key) in (27, 3, 4):
+                    # process keyboard events
+                    
+                    if index(key) in (27, 3, 4): # press ESC, CTRL+C, or CTRL+D to exit
                         sys.stdout.flush()
                         break
-                    
-                    if index(key) == 32:
+                    elif index(key) == 32:
                         scene.player.jump()
 
                     sys.stdout.flush()
+    # if i dont include the `except` clause the game will fail silently without showing the exeception`
     except Exception as e:
         raise e
+    # so that the terminal doesnt stay fucked up when the player closes the game
     finally:
         reset_terminal()
