@@ -41,7 +41,7 @@ def fwrite(s):
         f.write(s)
 
 SCREENW, SCREENH = os.get_terminal_size()
-REFRESH_RATE = 0.04 # in seconds
+REFRESH_RATE = 0.1
 SCENE_HEIGHT = 20
 PIPE_OPENING_SIZE = 5
 
@@ -52,7 +52,7 @@ class Player:
         self.y = 8
         # positive number when going downwards. dont ask why
         self.y_speed = -2  # slight jump when the game begins so you dont immediately die
-        self.y_acceleration = 0.15
+        self.y_acceleration = 0.2
     
     def jump(self):
         self.y_speed = -1
@@ -84,6 +84,12 @@ class Scene:
             print("\n\r", end="")
     
     def refresh(self):
+        global REFRESH_RATE
+        
+        if self.score >= 10:
+            self.player.y_acceleration = 0.15
+            REFRESH_RATE = 0.05
+        
         self.frame += 1
         self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes)) # filter out pipes that are no longer on the screen
         
