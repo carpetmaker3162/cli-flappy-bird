@@ -3,6 +3,8 @@ Flappy bird (?) in CLI
 
 Note: due to limitations with the code author's intelligence, you won't be able to resize the terminal once you're in the game. Rip, bozo!  
 
+Credit to Hello56721 for contributing one line of code (more specifically, line 67 of main.py)  
+
 **FAQ**  
 
 Q: What is this?  
