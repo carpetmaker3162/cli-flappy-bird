@@ -36,6 +36,11 @@ def index(char):
     else:
         return ord(char)
 
+def fwrite(s):
+    with open("test.txt", "w") as f:
+        f.write("\n\n")
+        f.write(s)
+
 SCREENW, SCREENH = os.get_terminal_size()
 REFRESH_RATE = 0.04 # in seconds
 SCENE_HEIGHT = 20
@@ -47,7 +52,7 @@ class Player:
         self.x = 10 # shouldnt ever change but just putting it here
         self.y = 8
         # positive number when going downwards. dont ask why
-        self.y_speed = -2
+        self.y_speed = -2  # slight jump when the game begins so you dont immediately die
         self.y_acceleration = 0.15
     
     def jump(self):
@@ -69,9 +74,14 @@ class Scene:
             print("\033[H")
         print("\r", end="")
         
+        score = list(str(self.score))
+        
         for row in self.matrix:
             for cell in row:
-                print(self.objcode[cell], end="")
+                if score:
+                    print(score.pop(0), end="")
+                else:
+                    print(self.objcode[cell], end="")
             print("\n\r", end="")
     
     def refresh(self):
@@ -104,6 +114,8 @@ class Scene:
                 self.player.dead[0] = True
                 self.player.x -= 1
                 self.player.y_acceleration = 0.1
+            elif self.player.x == px + 2:
+                self.score += 1
 
             for mx in range(px, px + 2):
                 for my in range(0, py):
