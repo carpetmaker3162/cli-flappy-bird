@@ -46,7 +46,7 @@ class Player:
         self.y = 8
         # positive number when going downwards. dont ask why
         self.y_speed = -2
-        self.y_acceleration = 0.2
+        self.y_acceleration = 0.15
     
     def jump(self):
         self.y_speed = -1
