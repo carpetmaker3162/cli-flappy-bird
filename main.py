@@ -35,20 +35,17 @@ def index(char):
     else:
         return ord(char)
 
-thread = threading.Thread(target=process_keyboard_events, args=(event_queue,))
-thread.daemon = True
-thread.start()
-
 SCREENW, SCREENH = os.get_terminal_size()
 REFRESH_RATE = 0.04 # in seconds
 SCENE_HEIGHT = 20
+PIPE_OPENING_SIZE = 5
 
 class Player:
     def __init__(self) -> None:
         self.x = 10 # shouldnt ever change but just putting it here
         self.y = 8
         # positive number when going downwards. dont ask why
-        self.y_speed = 1
+        self.y_speed = -2
         self.y_acceleration = 0.2
     
     def jump(self):
@@ -67,7 +64,7 @@ class Scene:
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
         if clear_screen:
-            print("\033[H")
+            print("\033[H")d
         print("\r", end="")
         
         for row in self.matrix:
@@ -89,7 +86,7 @@ class Scene:
     
     def add_new_pipe(self):
         self.last_pipe_generated = self.frame
-        self.pipes.append([SCREENW-2, random.randrange(2, 14)])
+        self.pipes.append([SCREENW-2, random.randrange(PIPE_OPENING_SIZE, SCENE_HEIGHT - PIPE_OPENING_SIZE)])
 
     def load_matrix(self):
         # loading the pipes
@@ -99,7 +96,7 @@ class Scene:
             px, py = queue.pop(0)
             
             # check for collision
-            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+3, SCENE_HEIGHT) or int(self.player.y) in range(-100000, py)):
+            if self.player.x in range(px, px + 2) and (int(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or int(self.player.y) in range(-100000, py)):
                 # raising an exception so that the `finally` clause is triggered. will change later
                 raise SystemExit
 
@@ -107,7 +104,7 @@ class Scene:
                 for my in range(0, py):
                     blank_matrix[my][mx] = 1
                 
-                for my in range(py+3, SCENE_HEIGHT):
+                for my in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT):
                     blank_matrix[my][mx] = 1
         
         self.matrix = blank_matrix
@@ -132,7 +129,19 @@ if __name__ == "__main__":
             scene.add_new_pipe()
             scene.refresh()
             scene.print()
+            
+            print("\rPRESS ANY KEY TO BEGIN")
+            
+            if index(getch()) in (27, 3, 4):
+                raise SystemExit # i have to stop using exceptions to hack together code lmao
+            
+            os.system("cls" if IS_WIN else "clear")
+
             # game loop
+            thread = threading.Thread(target=process_keyboard_events, args=(event_queue,))
+            thread.daemon = True
+            thread.start()
+
             while True:
                 # refresh objects on the screen
                 if time.time() - last_update > REFRESH_RATE:
