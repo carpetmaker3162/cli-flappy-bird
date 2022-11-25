@@ -110,10 +110,7 @@ class Scene:
             
             # check for collision
             if self.player.x in range(px, px + 2) and (math.ceil(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or math.ceil(self.player.y) in range(-100000, py)):
-                # raising an exception so that the `finally` clause is triggered. will change later
-                self.player.dead[0] = True
-                self.player.x -= 1
-                self.player.y_acceleration = 0.1
+                self.die()
             elif self.player.x == px + 2:
                 self.score += 1
 
@@ -130,7 +127,15 @@ class Scene:
         if 0<=self.player.y and SCENE_HEIGHT-1>self.player.y: # do not render the player if it is out of bounds, upwards
             self.matrix[math.ceil(self.player.y)][self.player.x] = 2
         elif self.player.y > SCENE_HEIGHT + 5: # kill if player is 5 units below the scene bottom
+            self.die()
+            print(f"\nScore: {self.score}", end="\n\r")
             raise SystemExit
+    
+    def die(self):
+        self.player.dead[0] = True
+        self.player.x -= 1
+        self.player.y_acceleration = 0.1
+        print("\rSUDDEN DEATH", end="\n\r")
 
 last_update = time.time()
 
