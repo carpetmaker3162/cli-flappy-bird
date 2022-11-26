@@ -44,7 +44,7 @@ SCREENW, SCREENH = os.get_terminal_size()
 REFRESH_RATE = 0.1
 PLAYER_REFRESH_RATE = 0.03
 SCENE_HEIGHT = 20
-PIPE_OPENING_SIZE = 5
+PIPE_OPENING_SIZE = 6
 
 class Player:
     def __init__(self) -> None:
@@ -56,7 +56,7 @@ class Player:
         self.y_acceleration = 0.1
     
     def jump(self):
-        self.y_speed = -1
+        self.y_speed = -0.75
     
     def update(self):
         self.y_speed += self.y_acceleration
@@ -69,7 +69,7 @@ class Scene:
         self.frame = 0
         self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
         self.player = Player()
-        self.objcode = {0: " ", 1: "#", 2: "O"}
+        self.objcode = {0: " ", 1: "#", 2: ">"}
         self.score = 0
         self.player_coordinates = (self.player.y, self.player.x)
     
@@ -92,8 +92,10 @@ class Scene:
     def refresh(self, player_coordinates=None):
         global REFRESH_RATE
         
-        if self.score >= 10:
+        if self.score >= 2:
             REFRESH_RATE = 0.05
+        elif self.score >= 4:
+            REFRESH_RATE = 0.01
         
         self.frame += 1
         self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes)) # filter out pipes that are no longer on the screen
@@ -150,6 +152,7 @@ class Scene:
             self.die()
             print(f"\nScore: {self.score}", end="\n\r")
             # since the main game loop doesnt detect player death, this is the only actual death condition within the game
+            print("\007", end="") # this character makes a strange noise
             raise SystemExit
         
         return py, px
