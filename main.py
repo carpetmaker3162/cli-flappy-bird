@@ -42,6 +42,7 @@ def fwrite(s):
 
 SCREENW, SCREENH = os.get_terminal_size()
 REFRESH_RATE = 0.1
+PLAYER_REFRESH_RATE = 0.03
 SCENE_HEIGHT = 20
 PIPE_OPENING_SIZE = 5
 
@@ -52,10 +53,14 @@ class Player:
         self.y = 8
         # positive number when going downwards. dont ask why
         self.y_speed = -2  # slight jump when the game begins so you dont immediately die
-        self.y_acceleration = 0.2
+        self.y_acceleration = 0.1
     
     def jump(self):
         self.y_speed = -1
+    
+    def update(self):
+        self.y_speed += self.y_acceleration
+        self.y += self.y_speed
 
 class Scene:
     def __init__(self) -> None:
@@ -66,6 +71,7 @@ class Scene:
         self.player = Player()
         self.objcode = {0: " ", 1: "#", 2: "O"}
         self.score = 0
+        self.player_coordinates = (self.player.y, self.player.x)
     
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
@@ -83,11 +89,10 @@ class Scene:
                     print(self.objcode[cell], end="")
             print("\n\r", end="")
     
-    def refresh(self):
+    def refresh(self, player_coordinates=None):
         global REFRESH_RATE
         
         if self.score >= 10:
-            self.player.y_acceleration = 0.15
             REFRESH_RATE = 0.05
         
         self.frame += 1
@@ -98,15 +103,13 @@ class Scene:
             for idx, pipe in enumerate(self.pipes):
                 self.pipes[idx][0] -= 1
         
-        self.player.y_speed += self.player.y_acceleration
-        self.player.y += self.player.y_speed
-        self.load_matrix()
+        self.load_matrix(player_coordinates)
     
     def add_new_pipe(self):
         self.last_pipe_generated = self.frame
         self.pipes.append([SCREENW-2, random.randrange(PIPE_OPENING_SIZE, SCENE_HEIGHT - PIPE_OPENING_SIZE)])
 
-    def load_matrix(self):
+    def load_matrix(self, player_coordinates=None):
         # loading the pipes
         queue = self.pipes[:]
         blank_matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)]
@@ -127,15 +130,29 @@ class Scene:
                     blank_matrix[my][mx] = 1
         
         self.matrix = blank_matrix
-        
+        self.player_coordinates = self.load_player(player_coordinates)
+    
+    def load_player(self, coords=None):
         # load the player
-        if 0<=self.player.y and SCENE_HEIGHT-1>self.player.y: # do not render the player if it is out of bounds, upwards
-            self.matrix[math.ceil(self.player.y)][self.player.x] = 2
+        for y, row in enumerate(self.matrix):
+            for x, cell in enumerate(row):
+                if cell == 2:
+                    self.matrix[y][x] = 0
+        
+        if coords:
+            py, px = coords
+        else:
+            py, px = math.ceil(self.player.y), self.player.x
+        
+        if 0<=py and SCENE_HEIGHT-1>py: # do not render the player if it is out of bounds, upwards
+            self.matrix[py][px] = 2
         elif self.player.y > SCENE_HEIGHT + 5: # kill if player is 5 units below the scene bottom
             self.die()
             print(f"\nScore: {self.score}", end="\n\r")
             # since the main game loop doesnt detect player death, this is the only actual death condition within the game
             raise SystemExit
+        
+        return py, px
     
     def die(self):
         self.player.dead[0] = True
@@ -143,57 +160,68 @@ class Scene:
         self.player.y_acceleration = 0.1
         print("\rSUDDEN DEATH", end="\n\r")
 
-last_update = time.time()
+last_refresh = time.time()
+last_player_refresh = time.time()
 
 if __name__ == "__main__":
     try:
-        if TESTING:
-            # when i need to test stuff
-            pass
-        else:
-            os.system("cls" if IS_WIN else "clear")
-            # initing
-            scene = Scene()
-            scene.add_new_pipe()
-            scene.refresh()
-            scene.print()
-            
-            print("\rPRESS ANY KEY TO BEGIN (YOU SHOULD PROBABLY PRESS SPACE THOUGH)")
-            
-            if index(getch()) in (27, 3, 4):
-                raise SystemExit # i have to stop using exceptions to hack together code lmao
-            
-            os.system("cls" if IS_WIN else "clear")
+        os.system("cls" if IS_WIN else "clear")
+        # initing
+        scene = Scene()
+        scene.add_new_pipe()
+        scene.refresh()
+        scene.print()
+        
+        print("\rPRESS ANY KEY TO BEGIN (YOU SHOULD PROBABLY PRESS SPACE THOUGH)")
+        
+        if index(getch()) in (27, 3, 4):
+            raise SystemExit # i have to stop using exceptions to hack together code lmao
+        
+        os.system("cls" if IS_WIN else "clear")
 
-            # game loop
-            thread = threading.Thread(target=process_keyboard_events, args=(event_queue, scene.player.dead))
-            thread.daemon = True
-            thread.start()
+        # game loop
+        thread = threading.Thread(target=process_keyboard_events, args=(event_queue, scene.player.dead))
+        thread.daemon = True
+        thread.start()
 
-            while True:
-                # refresh objects on the screen
-                if time.time() - last_update > REFRESH_RATE:
-                    last_update = time.time()
-                    
-                    # new pipe every 20 units. later on, as the game progresses, the pipes will become more frequent
-                    if scene.frame - scene.last_pipe_generated >= 20:
-                        scene.add_new_pipe()
-                    
-                    scene.refresh()
-                    scene.print()
+        while True:
+            # refresh objects
+            has_refreshed_player = False
+
+            if event_queue:
+                key = event_queue.pop(0)
                 
-                if event_queue:
-                    key = event_queue.pop(0)
-                    
-                    # process keyboard events
-                    
-                    if index(key) in (27, 3, 4): # press ESC, CTRL+C, or CTRL+D to exit
-                        sys.stdout.flush()
-                        break
-                    elif index(key) == 32:
-                        scene.player.jump()
-
+                # process keyboard events
+                
+                if index(key) in (27, 3, 4): # press ESC, CTRL+C, or CTRL+D to exit
                     sys.stdout.flush()
+                    break
+                elif index(key) == 32:
+                    scene.player.jump()
+
+                sys.stdout.flush()
+            
+            if time.time() - last_player_refresh > PLAYER_REFRESH_RATE:
+                last_player_refresh = time.time()
+                scene.player.update()
+                py, px = scene.player_coordinates
+                scene.load_player() # load player separately now (so that pipes dont update)
+                scene.print() # re-print scene
+                has_refreshed_player = True
+            
+            if time.time() - last_refresh > REFRESH_RATE:
+                last_refresh = time.time()
+                   
+                # new pipe every 20 units. later on, as the game progresses, the pipes will become more frequent
+                if scene.frame - scene.last_pipe_generated >= 20:
+                    scene.add_new_pipe()
+                
+                if has_refreshed_player:
+                    scene.refresh(scene.player_coordinates)
+                else:
+                    scene.refresh()
+                scene.print()
+            
     # if i dont include the `except` clause the game will fail silently without showing the exeception`
     except Exception as e:
         raise e
