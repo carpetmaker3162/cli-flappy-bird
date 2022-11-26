@@ -1,7 +1,6 @@
 .vscode
-test.py
-test.cpp
-a.out
+test.*
+*.out
 test.txt
 old/
 

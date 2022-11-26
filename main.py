@@ -69,7 +69,7 @@ class Scene:
         self.frame = 0
         self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
         self.player = Player()
-        self.objcode = {0: " ", 1: "#", 2: ">"}
+        self.objcode = {0: " ", 1: "#", 2: "\033[31m>\033[0m"}
         self.score = 0
         self.player_coordinates = (self.player.y, self.player.x)
     
