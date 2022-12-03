@@ -1,6 +1,5 @@
 # TODO: make the game get progressively more difficult
-# TODO: instead of refreshing based on in-game "frames", refresh based on real-life time, to allow the player to move more smoothly
-# TODO: after the above task is done, maybe make the physics a wee bit better
+# TODO: make more variation, like different width pipes, different size opening pipes, etc
 
 import time
 import threading
@@ -41,34 +40,45 @@ def fwrite(s):
         f.write(s)
 
 SCREENW, SCREENH = os.get_terminal_size()
-REFRESH_RATE = 0.1
-PLAYER_REFRESH_RATE = 0.03
+REFRESH_RATE = 0.05
+PLAYER_REFRESH_RATE = 0.02
 SCENE_HEIGHT = 20
 PIPE_OPENING_SIZE = 6
 
 class Player:
-    def __init__(self) -> None:
+    def __init__(self, mode) -> None:
         self.dead = [False] # simply using a bool doesnt work because the thread would just take the initial state of the bool and keep running
         self.x = 10 # shouldnt ever change but just putting it here
         self.y = 8
         # positive number when going downwards. dont ask why
         self.y_speed = -2  # slight jump when the game begins so you dont immediately die
-        self.y_acceleration = 0.1
+        self.y_speed = -0.3  # slight jump when the game begins so you dont immediately die
+        self.y_acceleration = 0.05
+
+        """
+        0 = classical flappy bird
+        1 = wave
+        """
+        self.mode = mode
     
     def jump(self):
-        self.y_speed = -0.75
+        if self.mode == 1:
+            self.y_speed = -self.y_speed
+        elif self.mode == 0:
+            self.y_speed = -0.5
     
     def update(self):
-        self.y_speed += self.y_acceleration
         self.y += self.y_speed
+        if self.mode == 0:
+            self.y_speed += self.y_acceleration
 
 class Scene:
-    def __init__(self) -> None:
+    def __init__(self, mode) -> None:
         self.pipes = []
         self.last_pipe_generated = 0
         self.frame = 0
         self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
-        self.player = Player()
+        self.player = Player(mode)
         self.objcode = {0: " ", 1: "#", 2: "\033[31m>\033[0m"}
         self.score = 0
         self.player_coordinates = (self.player.y, self.player.x)
@@ -120,7 +130,7 @@ class Scene:
             
             # check for collision
             if self.player.x in range(px, px + 2) and (math.ceil(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or math.ceil(self.player.y) in range(-100000, py)):
-                self.die()
+                self.die() # note to self: you can probably check for the precise cell in the matrix
             elif self.player.x == px + 2:
                 self.score += 1
 
@@ -152,7 +162,7 @@ class Scene:
             self.die()
             print(f"\nScore: {self.score}", end="\n\r")
             # since the main game loop doesnt detect player death, this is the only actual death condition within the game
-            print("\007", end="") # this character makes a strange noise
+            #print("\007", end="") # this character makes a strange noise
             raise SystemExit
         
         return py, px
@@ -170,7 +180,7 @@ if __name__ == "__main__":
     try:
         os.system("cls" if IS_WIN else "clear")
         # initing
-        scene = Scene()
+        scene = Scene(1)
         scene.add_new_pipe()
         scene.refresh()
         scene.print()
