@@ -79,7 +79,11 @@ class Scene:
         self.frame = 0
         self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
         self.player = Player(mode)
-        self.objcode = {0: " ", 1: "#", 2: "\033[31m>\033[0m"}
+        if mode == 0:
+            self.ansi = "\033[31m"
+        elif mode == 1:
+            self.ansi = "\033[34m"
+        self.objcode = {0: " ", 1: "#", 2: f"{self.ansi}>\033[0m"}
         self.score = 0
         self.player_coordinates = (self.player.y, self.player.x)
     
@@ -94,10 +98,10 @@ class Scene:
         for row in self.matrix:
             for cell in row:
                 if score:
-                    print(score.pop(0), end="")
+                    print(score.pop(0), end="", flush=False)
                 else:
-                    print(self.objcode[cell], end="")
-            print("\n\r", end="")
+                    print(self.objcode[cell], end="", flush=False)
+            print("\n\r", end="", flush=False)
     
     def refresh(self, player_coordinates=None):
         global REFRESH_RATE
