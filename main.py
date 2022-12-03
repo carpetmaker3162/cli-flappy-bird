@@ -94,14 +94,17 @@ class Scene:
         print("\r", end="")
         
         score = list(str(self.score))
+        buffer = str()
         
         for row in self.matrix:
             for cell in row:
                 if score:
-                    print(score.pop(0), end="", flush=False)
+                    buffer += score.pop(0)
                 else:
-                    print(self.objcode[cell], end="", flush=False)
-            print("\n\r", end="", flush=False)
+                    buffer += self.objcode[cell]
+            buffer += "\n\r"
+        
+        print(buffer, end="")
     
     def refresh(self, player_coordinates=None):
         global REFRESH_RATE
