@@ -187,7 +187,7 @@ if __name__ == "__main__":
     try:
         os.system("cls" if IS_WIN else "clear")
         # initing
-        scene = Scene(1)
+        scene = Scene(0)
         scene.add_new_pipe()
         scene.refresh()
         scene.print()
