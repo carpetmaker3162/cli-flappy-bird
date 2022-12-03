@@ -44,6 +44,7 @@ REFRESH_RATE = 0.05
 PLAYER_REFRESH_RATE = 0.02
 SCENE_HEIGHT = 20
 PIPE_OPENING_SIZE = 6
+MODE = 1
 
 class Player:
     def __init__(self, mode) -> None:
@@ -79,10 +80,12 @@ class Scene:
         self.frame = 0
         self.matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)] # collision/hitboxes
         self.player = Player(mode)
+        
         if mode == 0:
             self.ansi = "\033[31m"
         elif mode == 1:
             self.ansi = "\033[34m"
+        
         self.objcode = {0: " ", 1: "#", 2: f"{self.ansi}>\033[0m"}
         self.score = 0
         self.player_coordinates = (self.player.y, self.player.x)
@@ -187,7 +190,7 @@ if __name__ == "__main__":
     try:
         os.system("cls" if IS_WIN else "clear")
         # initing
-        scene = Scene(0)
+        scene = Scene(MODE)
         scene.add_new_pipe()
         scene.refresh()
         scene.print()
