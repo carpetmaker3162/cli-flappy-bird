@@ -44,7 +44,7 @@ REFRESH_RATE = 0.05
 PLAYER_REFRESH_RATE = 0.02
 SCENE_HEIGHT = 20
 PIPE_OPENING_SIZE = 6
-MODE = 1
+MODE = 0
 
 class Player:
     def __init__(self, mode) -> None:
@@ -138,18 +138,18 @@ class Scene:
         while queue:
             px, py = queue.pop(0)
             
-            # check for collision
-            if self.player.x in range(px, px + 2) and (math.ceil(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or math.ceil(self.player.y) in range(-100000, py)):
-                self.die() # note to self: you can probably check for the precise cell in the matrix
-            elif self.player.x == px + 2:
-                self.score += 1
-
             for mx in range(px, px + 2):
                 for my in range(0, py):
                     blank_matrix[my][mx] = 1
                 
                 for my in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT):
                     blank_matrix[my][mx] = 1
+        
+        # check for collision
+        if blank_matrix[math.ceil(self.player.y)][self.player.x] == 1:
+            self.die()
+        elif self.player.x == px + 2:
+            self.score += 1
         
         self.matrix = blank_matrix
         self.player_coordinates = self.load_player(player_coordinates)
