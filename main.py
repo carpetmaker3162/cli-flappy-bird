@@ -35,7 +35,7 @@ def index(char):
         return ord(char)
 
 def fwrite(s):
-    with open("test.txt", "w") as f:
+    with open("test.txt", "a") as f:
         f.write("\n\n")
         f.write(s)
 
@@ -138,6 +138,12 @@ class Scene:
         while queue:
             px, py = queue.pop(0)
             
+            # check for collision
+            if self.player.x in range(px, px + 2) and (math.ceil(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or math.ceil(self.player.y) in range(-100000, py)):
+                self.die() # note to self: you can probably check for the precise cell in the matrix
+            elif self.player.x == px + 2:
+                self.score += 1
+
             for mx in range(px, px + 2):
                 for my in range(0, py):
                     blank_matrix[my][mx] = 1
@@ -145,15 +151,9 @@ class Scene:
                 for my in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT):
                     blank_matrix[my][mx] = 1
         
-        # check for collision
-        if blank_matrix[math.ceil(self.player.y)][self.player.x] == 1:
-            self.die()
-        elif self.player.x == px + 2:
-            self.score += 1
-        
         self.matrix = blank_matrix
         self.player_coordinates = self.load_player(player_coordinates)
-    
+
     def load_player(self, coords=None):
         # load the player
         for y, row in enumerate(self.matrix):
