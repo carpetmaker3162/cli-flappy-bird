@@ -4,19 +4,25 @@
 import time
 import threading
 import sys
-import termios
 import os
+
+if os.name == "unix":
+    import termios
+
 import random
 import math
 from getch import getch
 from utils import Settings
 
 TESTING = False # for my own use because i am lazy
+IS_WIN = os.name == "nt" # fuck windows fr
 
 fd = sys.stdin.fileno()
-old_settings = termios.tcgetattr(fd)
+
+if not IS_WIN:
+    old_settings = termios.tcgetattr(fd)
+
 event_queue = []
-IS_WIN = os.name == "nt" # fuck windows fr
 
 def process_keyboard_events(q, dead):
     while not dead[0]:
