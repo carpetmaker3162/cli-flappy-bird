@@ -3,18 +3,42 @@
 
 import time
 import threading
+import sys
+import termios
+import os
 import random
 import math
-import sys
-import os
-
 from getch import getch
-from utils import Settings, process_keyboard_events, index, reset_terminal
-from utils import IS_WIN
+from utils import Settings
 
 TESTING = False # for my own use because i am lazy
 
+fd = sys.stdin.fileno()
+old_settings = termios.tcgetattr(fd)
 event_queue = []
+IS_WIN = os.name == "nt" # fuck windows fr
+
+def process_keyboard_events(q, dead):
+    while not dead[0]:
+        q.append(getch())
+
+def reset_terminal():
+    # i need to get someone to test the game on windows to make sure it works.
+    # ...if it doesnt its not like i can fix it myself since im on a mac but whatevs
+    if not IS_WIN:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+def index(char):
+    # alternative to ord() that doesnt break when user presses space
+    if char is None or char == " " or len(char) == 0:
+        return 32
+    else:
+        return ord(char)
+
+def fwrite(s):
+    with open("test.txt", "a") as f:
+        f.write("\n\n")
+        f.write(s)
 
 SCREENW, SCREENH = os.get_terminal_size()
 REFRESH_RATE = 0.05

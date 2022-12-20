@@ -1,38 +1,7 @@
 import yaml
-import termios
-from getch import getch
-import sys
-import os
-
-fd = sys.stdin.fileno()
-old_settings = termios.tcgetattr(fd)
-event_queue = []
-IS_WIN = os.name == "nt" # fuck windows fr
 
 with open("config.yaml", encoding="UTF-8") as file:
     CONFIG_YAML = yaml.safe_load(file)
-
-def process_keyboard_events(q, dead):
-    while not dead[0]:
-        q.append(getch())
-
-def reset_terminal():
-    # i need to get someone to test the game on windows to make sure it works.
-    # ...if it doesnt its not like i can fix it myself since im on a mac but whatevs
-    if not IS_WIN:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-def index(char):
-    # alternative to ord() that doesnt break when user presses space
-    if char is None or char == " " or len(char) == 0:
-        return 32
-    else:
-        return ord(char)
-
-def fwrite(s):
-    with open("test.txt", "a") as f:
-        f.write("\n\n")
-        f.write(s)
 
 class YAMLParser(type):
     subsection = None
