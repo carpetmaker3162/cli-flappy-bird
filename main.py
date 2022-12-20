@@ -9,6 +9,7 @@ import os
 import random
 import math
 from getch import getch
+from utils import Settings
 
 TESTING = False # for my own use because i am lazy
 
@@ -44,7 +45,7 @@ REFRESH_RATE = 0.05
 PLAYER_REFRESH_RATE = 0.02
 SCENE_HEIGHT = 20
 PIPE_OPENING_SIZE = 6
-MODE = 0
+MODE = Settings.character
 
 class Player:
     def __init__(self, mode) -> None:
@@ -86,9 +87,13 @@ class Scene:
         elif mode == 1:
             self.ansi = "\033[34m"
         
-        self.objcode = {0: " ", 1: "#", 2: f"{self.ansi}>\033[0m"}
+        self.objcode = {0: " ", 1: "#", -1: f"{self.ansi}>\033[0m"}
         self.score = 0
         self.player_coordinates = (self.player.y, self.player.x)
+    
+    def texture(self, val):
+        if val in self.objcode:
+            return self.objcode[val]
     
     def print(self, clear_screen=True):
         # clear_screen is for debugging purposes
@@ -97,17 +102,17 @@ class Scene:
         print("\r", end="")
         
         score = list(str(self.score))
-        buffer = str()
+        buf = str()
         
         for row in self.matrix:
             for cell in row:
                 if score:
-                    buffer += score.pop(0)
+                    buf += score.pop(0)
                 else:
-                    buffer += self.objcode[cell]
-            buffer += "\n\r"
+                    buf += self.objcode[cell]
+            buf += "\n\r"
         
-        print(buffer, end="")
+        print(buf, end="")
     
     def refresh(self, player_coordinates=None):
         global REFRESH_RATE
@@ -118,25 +123,27 @@ class Scene:
             REFRESH_RATE = 0.01
         
         self.frame += 1
-        self.pipes = list(filter(lambda a: a[0] >= 0, self.pipes)) # filter out pipes that are no longer on the screen
+        self.pipes = list(filter(lambda a: a[0][0] >= 0, self.pipes)) # filter out pipes that are no longer on the screen
         
         # move all pipes to the left
         if not self.player.dead[0]:
             for idx, pipe in enumerate(self.pipes):
-                self.pipes[idx][0] -= 1
+                self.pipes[idx][0][0] -= 1
+                self.pipes[idx][1] += 1
         
         self.load_matrix(player_coordinates)
     
     def add_new_pipe(self):
         self.last_pipe_generated = self.frame
-        self.pipes.append([SCREENW-2, random.randrange(PIPE_OPENING_SIZE, SCENE_HEIGHT - PIPE_OPENING_SIZE)])
+        self.pipes.append([[SCREENW-2, random.randrange(PIPE_OPENING_SIZE, SCENE_HEIGHT - PIPE_OPENING_SIZE)], 0])
 
     def load_matrix(self, player_coordinates=None):
         # loading the pipes
         queue = self.pipes[:]
         blank_matrix = [[0 for i in range(SCREENW)] for i in range(SCENE_HEIGHT)]
         while queue:
-            px, py = queue.pop(0)
+            pipe, age = queue.pop(0)
+            px, py = pipe
             
             # check for collision
             if self.player.x in range(px, px + 2) and (math.ceil(self.player.y) in range(py+PIPE_OPENING_SIZE, SCENE_HEIGHT) or math.ceil(self.player.y) in range(-100000, py)):
@@ -155,10 +162,10 @@ class Scene:
         self.player_coordinates = self.load_player(player_coordinates)
 
     def load_player(self, coords=None):
-        # load the player
+        # erase the existing player
         for y, row in enumerate(self.matrix):
             for x, cell in enumerate(row):
-                if cell == 2:
+                if cell == -1:
                     self.matrix[y][x] = 0
         
         if coords:
@@ -167,7 +174,7 @@ class Scene:
             py, px = math.ceil(self.player.y), self.player.x
         
         if 0<=py and SCENE_HEIGHT-1>py: # do not render the player if it is out of bounds, upwards
-            self.matrix[py][px] = 2
+            self.matrix[py][px] = -1
         elif self.player.y > SCENE_HEIGHT + 5: # kill if player is 5 units below the scene bottom
             self.die()
             print(f"\nScore: {self.score}", end="\n\r")
