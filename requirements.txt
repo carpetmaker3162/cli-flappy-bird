@@ -1,2 +1,1 @@
 PyYAML >= 6.0
-pygame >= 2.1.2
