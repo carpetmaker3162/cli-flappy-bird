@@ -6,7 +6,7 @@ import threading
 import sys
 import os
 
-if os.name == "unix":
+if os.name != "nt":
     import termios
 
 import random
