@@ -3,7 +3,7 @@
 
 Note: due to limitations with the code author's intelligence, you won't be able to resize the terminal once you're in the game. Rip, bozo!  
 
-Credit to earthtraveller1 for contributing one line of code (more specifically, line 96 of main.py)  
+Credit to earthtraveller1 for contributing one line of code (more specifically, line 74 of main.py) along with a pull request that fixed a lethal error which previously affected 71% of the userbase, we will forever remember him as a hero for that  
 
 **FAQ**  
 
